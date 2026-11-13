@@ -1,0 +1,334 @@
+---
+import { NEGOCIO, TRATAMIENTOS, formatoPrecio } from "../config.js";
+
+const datos = {
+  tratamientos: TRATAMIENTOS.map(({ id, nombre, duracion, precio }) => ({
+    id,
+    nombre,
+    duracion,
+    precio,
+  })),
+  horarios: NEGOCIO.horarios,
+  dias: NEGOCIO.diasReservables,
+  whatsapp: NEGOCIO.whatsapp,
+  nombre: `${NEGOCIO.nombre} ${NEGOCIO.subtitulo}`,
+};
+---
+
+<div class="booking" data-booking>
+  <ol class="booking-steps" aria-label="Pasos de la reserva">
+    <li data-step-tab="1" class="is-current"><span>01</span> Tratamiento</li>
+    <li data-step-tab="2"><span>02</span> Fecha y hora</li>
+    <li data-step-tab="3"><span>03</span> Tus datos</li>
+  </ol>
+
+  <form class="booking-form" novalidate>
+    <!-- Paso 1: tratamiento -->
+    <fieldset class="step is-active" data-step="1">
+      <legend class="step-title">Elige tu tratamiento</legend>
+      <div class="options">
+        {TRATAMIENTOS.map((t, i) => (
+          <label class="option">
+            <input type="radio" name="tratamiento" value={t.id} checked={i === 0} />
+            <span class="option-name">{t.nombre}</span>
+            <span class="option-meta">{t.duracion} min</span>
+            <span class="option-price">{formatoPrecio(t.precio)}</span>
+          </label>
+        ))}
+      </div>
+      <div class="step-nav">
+        <span></span>
+        <button type="button" class="btn btn-dark" data-next>Elegir fecha</button>
+      </div>
+    </fieldset>
+
+    <!-- Paso 2: fecha y hora -->
+    <fieldset class="step" data-step="2">
+      <legend class="step-title">¿Cuándo te esperamos?</legend>
+      <div class="cal">
+        <div class="cal-head">
+          <span class="cal-month" data-month></span>
+          <div class="cal-arrows">
+            <button type="button" class="cal-arrow" data-prev-days aria-label="Días anteriores">←</button>
+            <button type="button" class="cal-arrow" data-next-days aria-label="Días siguientes">→</button>
+          </div>
+        </div>
+        <div class="days" data-days role="radiogroup" aria-label="Fecha"></div>
+      </div>
+      <p class="slots-label">Horario disponible</p>
+      <div class="slots" data-slots role="radiogroup" aria-label="Horario"></div>
+      <p class="field-error" data-error="2" hidden>Elige una fecha y un horario.</p>
+      <div class="step-nav">
+        <button type="button" class="btn-text" data-back>← Volver</button>
+        <button type="button" class="btn btn-dark" data-next>Continuar</button>
+      </div>
+    </fieldset>
+
+    <!-- Paso 3: datos -->
+    <fieldset class="step" data-step="3">
+      <legend class="step-title">Tus datos</legend>
+      <div class="fields">
+        <label class="field">
+          <span>Nombre completo</span>
+          <input name="nombre" autocomplete="name" required />
+          <small class="field-error" hidden>Escribe tu nombre.</small>
+        </label>
+        <label class="field">
+          <span>Teléfono o WhatsApp</span>
+          <input name="telefono" type="tel" autocomplete="tel" inputmode="tel" required />
+          <small class="field-error" hidden>Escribe un teléfono de contacto.</small>
+        </label>
+        <label class="field field-wide">
+          <span>Correo electrónico</span>
+          <input name="email" type="email" autocomplete="email" required />
+          <small class="field-error" hidden>Escribe un correo válido.</small>
+        </label>
+        <label class="field field-wide">
+          <span>Notas para tu terapeuta <em>(opcional)</em></span>
+          <textarea name="notas" rows="2"></textarea>
+        </label>
+      </div>
+      <div class="summary" data-summary></div>
+      <div class="step-nav">
+        <button type="button" class="btn-text" data-back>← Volver</button>
+        <button type="submit" class="btn btn-dark">Solicitar reserva</button>
+      </div>
+    </fieldset>
+
+    <!-- Resultado -->
+    <div class="step step-done" data-step="4" tabindex="-1">
+      <p class="eyebrow">Solicitud preparada</p>
+      <h3 class="done-title">Gracias, <span data-done-name></span>.</h3>
+      <div class="summary" data-done-summary></div>
+      <p class="done-note" data-done-note></p>
+      <div class="step-nav">
+        <button type="button" class="btn-text" data-restart>Hacer otra reserva</button>
+        <a class="btn btn-dark" data-done-link hidden target="_blank" rel="noopener">Abrir WhatsApp</a>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script type="application/json" id="booking-data" set:html={JSON.stringify(datos)} />
+
+<script>
+  const root = document.querySelector<HTMLElement>("[data-booking]")!;
+  const form = root.querySelector("form")!;
+  const D = JSON.parse(document.getElementById("booking-data")!.textContent!);
+  const precio = (n: number) => "$" + n.toLocaleString("en-US") + " MXN";
+
+  let step = 1;
+  let fecha: Date | null = null;
+  let hora: string | null = null;
+  let offset = 0;
+  const visibles = () => (window.innerWidth < 640 ? 5 : 7);
+
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const dias = Array.from({ length: D.dias }, (_, i) => {
+    const d = new Date(hoy);
+    d.setDate(hoy.getDate() + i + 1);
+    return d;
+  });
+
+  const tratamiento = () => {
+    const id = (form.elements.namedItem("tratamiento") as RadioNodeList).value;
+    return D.tratamientos.find((t: any) => t.id === id);
+  };
+
+  // Disponibilidad ilustrativa: determinista por fecha y hora, para que la demo se vea real
+  // sin depender de un backend. Al conectar una agenda real, sustituir por su respuesta.
+  const ocupado = (d: Date, h: string) => {
+    const s = d.toDateString() + h;
+    let x = 0;
+    for (const c of s) x = (x * 31 + c.charCodeAt(0)) >>> 0;
+    return x % 3 === 0;
+  };
+
+  const fmtFecha = (d: Date) =>
+    d.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" });
+
+  function go(n: number) {
+    step = n;
+    root.querySelectorAll<HTMLElement>("[data-step]").forEach((el) => {
+      el.classList.toggle("is-active", Number(el.dataset.step) === n);
+    });
+    root.querySelectorAll<HTMLElement>("[data-step-tab]").forEach((el) => {
+      const s = Number(el.dataset.stepTab);
+      el.classList.toggle("is-current", s === n);
+      el.classList.toggle("is-done", s < n);
+    });
+    if (n === 2) renderDias();
+    if (n === 3) renderResumen(root.querySelector("[data-summary]")!);
+  }
+
+  function renderDias() {
+    const wrap = root.querySelector("[data-days]")!;
+    const v = visibles();
+    offset = Math.max(0, Math.min(offset, dias.length - v));
+    const lista = dias.slice(offset, offset + v);
+    root.querySelector("[data-month]")!.textContent = lista[0].toLocaleDateString("es-MX", {
+      month: "long",
+      year: "numeric",
+    });
+    wrap.innerHTML = "";
+    lista.forEach((d) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "day";
+      b.setAttribute("role", "radio");
+      const sel = fecha?.getTime() === d.getTime();
+      b.setAttribute("aria-checked", String(sel));
+      b.setAttribute("aria-label", fmtFecha(d));
+      b.innerHTML = `<span>${d.toLocaleDateString("es-MX", { weekday: "short" }).replace(".", "")}</span><strong>${d.getDate()}</strong>`;
+      b.addEventListener("click", () => {
+        fecha = d;
+        hora = null;
+        renderDias();
+      });
+      wrap.appendChild(b);
+    });
+    (root.querySelector("[data-prev-days]") as HTMLButtonElement).disabled = offset === 0;
+    (root.querySelector("[data-next-days]") as HTMLButtonElement).disabled = offset + v >= dias.length;
+    renderHoras();
+  }
+
+  function renderHoras() {
+    const wrap = root.querySelector("[data-slots]")!;
+    wrap.innerHTML = "";
+    if (!fecha) {
+      wrap.innerHTML = `<p class="slots-empty">Selecciona un día para ver los horarios.</p>`;
+      return;
+    }
+    const t = tratamiento();
+    D.horarios.forEach((h: string) => {
+      const [hh, mm] = h.split(":").map(Number);
+      const fin = hh * 60 + mm + t.duracion;
+      const cierre = fecha!.getDay() === 0 ? 18 * 60 : 20 * 60; // domingo cierra antes
+      const lleno = ocupado(fecha!, h) || fin > cierre;
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "slot";
+      b.textContent = h;
+      b.setAttribute("role", "radio");
+      b.setAttribute("aria-checked", String(hora === h));
+      b.disabled = lleno;
+      if (lleno) b.setAttribute("aria-label", `${h}, no disponible`);
+      b.addEventListener("click", () => {
+        hora = h;
+        root.querySelector<HTMLElement>('[data-error="2"]')!.hidden = true;
+        renderHoras();
+      });
+      wrap.appendChild(b);
+    });
+  }
+
+  function resumenHTML() {
+    const t = tratamiento();
+    return `
+      <div><span>Tratamiento</span><strong>${t.nombre} · ${t.duracion} min</strong></div>
+      <div><span>Fecha</span><strong>${fecha ? fmtFecha(fecha) : "—"}${hora ? ", " + hora : ""}</strong></div>
+      <div><span>Total</span><strong>${precio(t.precio)}</strong></div>`;
+  }
+  const renderResumen = (el: Element) => (el.innerHTML = resumenHTML());
+
+  function validarDatos() {
+    let ok = true;
+    form.querySelectorAll<HTMLInputElement>(".field input[required]").forEach((inp) => {
+      const err = inp.parentElement!.querySelector<HTMLElement>(".field-error")!;
+      const bad = !inp.value.trim() || (inp.type === "email" && !inp.checkValidity());
+      err.hidden = !bad;
+      inp.setAttribute("aria-invalid", String(bad));
+      if (bad && ok) {
+        inp.focus();
+        ok = false;
+      }
+    });
+    return ok;
+  }
+
+  root.querySelectorAll("[data-next]").forEach((b) =>
+    b.addEventListener("click", () => {
+      if (step === 2 && (!fecha || !hora)) {
+        root.querySelector<HTMLElement>('[data-error="2"]')!.hidden = false;
+        return;
+      }
+      go(step + 1);
+    })
+  );
+  root.querySelectorAll("[data-back]").forEach((b) => b.addEventListener("click", () => go(step - 1)));
+  root.querySelector("[data-prev-days]")!.addEventListener("click", () => {
+    offset -= visibles();
+    renderDias();
+  });
+  root.querySelector("[data-next-days]")!.addEventListener("click", () => {
+    offset += visibles();
+    renderDias();
+  });
+  form.addEventListener("change", (e) => {
+    if ((e.target as HTMLInputElement).name === "tratamiento") hora = null;
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!validarDatos()) return;
+    const d = new FormData(form);
+    const t = tratamiento();
+    const nombre = String(d.get("nombre")).trim();
+    root.querySelector("[data-done-name]")!.textContent = nombre.split(" ")[0];
+    renderResumen(root.querySelector("[data-done-summary]")!);
+    const link = root.querySelector<HTMLAnchorElement>("[data-done-link]")!;
+    const note = root.querySelector("[data-done-note]")!;
+
+    const texto =
+      `Hola, soy ${nombre}. Quiero reservar ${t.nombre} (${t.duracion} min, ${precio(t.precio)}) ` +
+      `el ${fmtFecha(fecha!)} a las ${hora}. Teléfono: ${d.get("telefono")}. Correo: ${d.get("email")}.` +
+      (d.get("notas") ? ` Notas: ${d.get("notas")}.` : "") +
+      ` (${D.nombre})`;
+
+    if (D.whatsapp) {
+      const url = `https://wa.me/${D.whatsapp}?text=${encodeURIComponent(texto)}`;
+      link.href = url;
+      link.hidden = false;
+      note.textContent =
+        "Tu cita aún no está confirmada. Envía el mensaje por WhatsApp y el equipo te responderá para confirmarla.";
+      window.open(url, "_blank", "noopener");
+    } else {
+      link.hidden = true;
+      note.textContent =
+        "Sitio de demostración: esta solicitud no se envió a ningún spa y no hay una cita reservada. En un sitio real, este paso la envía a la agenda o al WhatsApp del negocio, y el equipo confirma la cita.";
+    }
+    go(4);
+    root.querySelector<HTMLElement>('[data-step="4"]')!.focus();
+  });
+
+  root.querySelector("[data-restart]")!.addEventListener("click", () => {
+    form.reset();
+    fecha = null;
+    hora = null;
+    offset = 0;
+    form.querySelectorAll(".field-error").forEach((e) => ((e as HTMLElement).hidden = true));
+    go(1);
+  });
+
+  // Botones "Reservar" de las tarjetas: preseleccionan el tratamiento.
+  document.querySelectorAll<HTMLAnchorElement>("[data-reservar]").forEach((a) =>
+    a.addEventListener("click", () => {
+      const id = a.dataset.reservar;
+      const r = form.querySelector<HTMLInputElement>(`input[name="tratamiento"][value="${id}"]`);
+      if (r) {
+        r.checked = true;
+        hora = null;
+        go(1);
+      }
+    })
+  );
+
+  let ancho = visibles();
+  window.addEventListener("resize", () => {
+    if (visibles() !== ancho && step === 2) {
+      ancho = visibles();
+      renderDias();
+    }
+  });
+</script>

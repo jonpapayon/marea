@@ -1,249 +1,271 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { NEGOCIO, SERVICIOS } from "../config.js";
+import Reserva from "../components/Reserva.astro";
+import { NEGOCIO, TRATAMIENTOS, formatoPrecio } from "../config.js";
 
-const wa = (texto) =>
-  `https://wa.me/${NEGOCIO.whatsapp}?text=${encodeURIComponent(texto)}`;
-
-const waReserva = wa(`Hola, quiero reservar una cita en ${NEGOCIO.nombre}.`);
-const mapa = `https://www.google.com/maps?q=${encodeURIComponent(
-  NEGOCIO.direccion
-)}&output=embed`;
-const comoLlegar = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-  NEGOCIO.direccion
-)}`;
-
-const schema = {
-  "@context": "https://schema.org",
-  "@type": "DaySpa",
-  name: NEGOCIO.nombre,
-  telephone: "+523511033667",
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: "C. Aquiles Serdán 14, Centro",
-    addressLocality: "Chilchota",
-    addressRegion: "Michoacán",
-    addressCountry: "MX",
-  },
-  openingHoursSpecification: [
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      opens: "16:00",
-      closes: "20:00",
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: "Saturday",
-      opens: "09:00",
-      closes: "14:00",
-    },
-  ],
-};
 const year = new Date().getFullYear();
+const desde = Math.min(...TRATAMIENTOS.map((t) => t.precio));
 ---
 
-<Layout title="Spa en Chilchota, Michoacán | Clínica Prados — masajes y faciales">
-  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
-
-  <header class="top">
-    <div class="container top-inner">
-      <a class="brand" href="#inicio">
-        {NEGOCIO.nombre}
-        <small>Spa · Chilchota</small>
+<Layout title="MAREA Spa & Wellness · Spa boutique en Tulum">
+  <header class="nav" data-nav>
+    <div class="wrap nav-inner">
+      <a class="logo" href="#inicio" aria-label="MAREA Spa & Wellness, inicio">
+        MAREA<span>Spa &amp; Wellness</span>
       </a>
-      <nav>
-        <a href="#servicios">Servicios</a>
-        <a href="#ubicacion">Ubicación</a>
-        <a class="btn btn-primary" href="#reservar">Reservar</a>
+      <nav class="nav-links" id="menu" aria-label="Principal">
+        <a href="#experiencias">Experiencias</a>
+        <a href="#tratamientos">Tratamientos</a>
+        <a href="#nosotros">Nosotros</a>
+        <a class="btn btn-light nav-cta" href="#reservar">Reservar</a>
       </nav>
+      <button class="menu-toggle" aria-controls="menu" aria-expanded="false" data-menu>
+        <span class="sr">Abrir menú</span><i></i><i></i>
+      </button>
     </div>
   </header>
 
-  <main>
+  <main id="contenido">
+    <!-- 1. Hero -->
     <section class="hero" id="inicio">
-      <div class="container">
-        <span class="eyebrow">Spa en Chilchota, Michoacán</span>
-        <h1>Tu momento de descanso en Chilchota</h1>
-        <p>
-          Masajes, faciales, pedicura y tratamientos corporales en el centro de
-          Chilchota. Reserva tu cita por WhatsApp en un minuto.
+      <div class="hero-media">
+        <picture>
+          <source media="(max-width: 760px)" srcset="/img/hero-m.webp" />
+          <img
+            src="/img/hero.webp"
+            alt="Patio interior con alberca de agua turquesa, plantas tropicales y un sillón de ratán"
+            fetchpriority="high"
+            width="2000"
+            height="1600"
+          />
+        </picture>
+      </div>
+      <div class="hero-copy">
+        <p class="eyebrow enter" style="--d:0">Spa boutique · Tulum</p>
+        <h1 class="enter" style="--d:1">Rituales de calma entre la selva y el mar.</h1>
+        <p class="lead enter" style="--d:2">
+          Masajes, rituales faciales y experiencias corporales de 60 y 90 minutos,
+          en cabinas abiertas a un jardín tropical.
         </p>
-        <div class="actions">
-          <a class="btn btn-primary" href={waReserva} target="_blank" rel="noopener">
-            Reservar por WhatsApp
-          </a>
-          <a class="btn btn-ghost" href="#servicios">Ver servicios</a>
+        <div class="hero-actions enter" style="--d:3">
+          <a class="btn btn-dark" href="#reservar">Reservar experiencia</a>
+          <a class="link" href="#tratamientos">Ver tratamientos</a>
+        </div>
+        <p class="hero-fact enter" style="--d:4">Desde {formatoPrecio(desde)}</p>
+      </div>
+    </section>
+
+    <!-- 2. Filosofía -->
+    <section class="section philosophy" id="nosotros">
+      <div class="wrap philosophy-grid">
+        <figure class="philosophy-img zoom">
+          <img
+            src="/img/bano.webp"
+            alt="Tina de piedra junto a una palmera en un baño de muros de concreto"
+            loading="lazy"
+            width="1200"
+            height="800"
+          />
+        </figure>
+        <div class="philosophy-copy">
+          <p class="eyebrow">Filosofía MAREA</p>
+          <h2>Un lugar que se mueve al ritmo del agua.</h2>
+          <p>
+            MAREA nace de una idea sencilla: en Tulum el tiempo lo marcan el mar y la
+            selva. Por eso cada visita empieza sin prisa, con un té de bienvenida y un
+            momento de silencio antes del tratamiento.
+          </p>
+          <p>
+            Piedra local, madera, lino y luz natural. Nada sobra, para que lo único
+            que tengas que hacer sea descansar.
+          </p>
+          <dl class="facts">
+            <div><dt>Cabinas</dt><dd>Abiertas al jardín</dd></div>
+            <div><dt>Visita</dt><dd>60 a 90 minutos</dd></div>
+            <div><dt>Horario</dt><dd>Todos los días</dd></div>
+          </dl>
         </div>
       </div>
     </section>
 
-    <section class="section" id="servicios">
-      <div class="container">
-        <h2>Nuestros servicios</h2>
-        <p>Elige el tratamiento que necesitas y reserva tu lugar.</p>
-        <div class="grid">
-          {SERVICIOS.map((s) => (
-            <div class="card">
-              <div class="icon">{s.icono}</div>
-              <h3>{s.nombre}</h3>
-              <p>{s.texto}</p>
-              {s.precio && <span class="price">{s.precio}</span>}
-            </div>
+    <!-- 3. Tratamientos -->
+    <section class="section treatments" id="tratamientos">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Tratamientos</p>
+            <h2>Cuatro rituales, un mismo cuidado.</h2>
+          </div>
+          <p class="section-intro">
+            Cada tratamiento incluye acceso al jardín de descanso y té de la casa
+            antes y después de tu sesión.
+          </p>
+        </div>
+        <div class="cards">
+          {TRATAMIENTOS.map((t, i) => (
+            <article class="card">
+              <a class="card-link" href="#reservar" data-reservar={t.id}>
+                <div class="card-img zoom">
+                  <img src={t.imagen} alt={t.alt} loading="lazy" width="1000" height="1250" />
+                </div>
+                <h3>{t.nombre}</h3>
+                <p class="card-text">{t.texto}</p>
+                <p class="card-meta">
+                  <span>{t.duracion} min</span>
+                  <span>{formatoPrecio(t.precio)}</span>
+                </p>
+                <span class="card-cta">Reservar <span aria-hidden="true">→</span></span>
+              </a>
+            </article>
           ))}
         </div>
       </div>
     </section>
 
-    <section class="section alt">
-      <div class="container">
-        <h2>Un espacio para consentirte</h2>
-        <div class="grid">
-          <div class="card">
-            <h3>Atención personalizada</h3>
-            <p>Cada sesión se adapta a lo que necesitas.</p>
-          </div>
-          <div class="card">
-            <h3>Un lugar para descansar</h3>
-            <p>Un ambiente pensado para que te desconectes un rato.</p>
-          </div>
-          <div class="card">
-            <h3>Con cita, para ti</h3>
-            <p>Reserva tu horario y ten tu momento asegurado.</p>
-          </div>
+    <!-- 4. Experiencia destacada -->
+    <section class="feature" id="experiencias">
+      <div class="feature-media reveal" data-reveal>
+        <picture>
+          <source media="(max-width: 760px)" srcset="/img/experiencia-m.webp" />
+          <img
+            src="/img/experiencia.webp"
+            alt="Alberca al atardecer entre dos hileras de palmeras iluminadas"
+            loading="lazy"
+            width="1800"
+            height="1200"
+          />
+        </picture>
+      </div>
+      <div class="wrap feature-wrap">
+        <div class="feature-box">
+          <p class="eyebrow">La experiencia MAREA</p>
+          <h2>Tres tiempos para volver a ti.</h2>
+          <ol class="ritual">
+            <li><span>I</span><div><strong>Llegada</strong> Té de hierbas, toalla tibia y un recorrido por el jardín.</div></li>
+            <li><span>II</span><div><strong>Tratamiento</strong> Tu terapeuta adapta presión, aroma y ritmo a lo que necesitas.</div></li>
+            <li><span>III</span><div><strong>Reposo</strong> La alberca entre palmeras, sin reloj, el tiempo que quieras.</div></li>
+          </ol>
+          <a class="btn btn-light" href="#reservar">Reservar experiencia</a>
         </div>
       </div>
     </section>
 
-    <section class="section" id="ubicacion">
-      <div class="container two">
-        <div>
-          <h2>Horario y ubicación</h2>
+    <!-- 5. Instalaciones -->
+    <section class="section spaces" id="instalaciones">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Instalaciones</p>
+            <h2>Piedra, palma y agua.</h2>
+          </div>
+          <p class="section-intro">
+            Sauna de madera, alberca bajo palapas y cabinas con luz natural, a unos
+            minutos de la playa.
+          </p>
+        </div>
+        <div class="gallery">
+          <figure class="g g1 zoom"><img src="/img/palapa.webp" alt="Alberca entre palmeras y palapas de techo de palma" loading="lazy" width="900" height="1200" /></figure>
+          <figure class="g g2 zoom"><img src="/img/sauna.webp" alt="Sauna de madera oscura con bancas iluminadas" loading="lazy" width="1200" height="800" /></figure>
+          <figure class="g g3 zoom"><img src="/img/facial-cabina.webp" alt="Tratamiento facial con mascarilla en una cabina" loading="lazy" width="1200" height="800" /></figure>
+          <figure class="g g4 zoom"><img src="/img/aceites-madera.webp" alt="Frascos de aceite y una vela sobre una mesa de madera" loading="lazy" width="1000" height="667" /></figure>
+          <figure class="g g5 zoom"><img src="/img/cabina.webp" alt="Cabina de descanso con madera oscura y luz tropical entrando por los ventanales" loading="lazy" width="1200" height="800" /></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Reserva -->
+    <section class="section booking-section" id="reservar">
+      <div class="wrap booking-grid">
+        <div class="booking-copy">
+          <p class="eyebrow">Reserva en línea</p>
+          <h2>Reserva tu experiencia en menos de un minuto.</h2>
+          <p>
+            Elige tratamiento, día y horario. Recibirás la confirmación de tu cita
+            por parte del equipo de MAREA.
+          </p>
           <ul class="hours">
             {NEGOCIO.horario.map((h) => (
-              <li>
-                <span>{h.dias}</span>
-                <strong>{h.horas}</strong>
-              </li>
+              <li><span>{h.dias}</span><span>{h.horas}</span></li>
             ))}
           </ul>
-          <p>{NEGOCIO.direccion}</p>
-          <p>Teléfono: {NEGOCIO.telefono}</p>
-          <div class="actions">
-            <a class="btn btn-ghost" href={comoLlegar} target="_blank" rel="noopener">
-              Cómo llegar
-            </a>
-          </div>
+          <p class="booking-small">
+            Te recomendamos llegar 15 minutos antes. Cambios sin costo con 24 horas de anticipación.
+          </p>
         </div>
-        <iframe
-          class="map"
-          title="Mapa de Clínica Prados"
-          src={mapa}
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"></iframe>
-      </div>
-    </section>
-
-    <section class="section alt" id="reservar">
-      <div class="container">
-        <h2>Reserva tu cita</h2>
-        <p>Llena los datos y se abrirá WhatsApp con tu mensaje listo.</p>
-        <form id="reserva" class="form">
-          <label>
-            Tu nombre
-            <input name="nombre" required autocomplete="name" />
-          </label>
-          <label>
-            Servicio
-            <select name="servicio" required>
-              {SERVICIOS.map((s) => <option>{s.nombre}</option>)}
-              <option>Otro / aún no lo sé</option>
-            </select>
-          </label>
-          <label>
-            Día preferido
-            <input type="date" name="dia" />
-          </label>
-          <label>
-            Horario
-            <select name="horario">
-              <option>4:00 – 6:00 p. m.</option>
-              <option>6:00 – 8:00 p. m.</option>
-              <option>Sábado por la mañana</option>
-            </select>
-          </label>
-          <button class="btn btn-primary" type="submit">Enviar por WhatsApp</button>
-          <p class="note">Tu cita queda confirmada cuando te respondamos por WhatsApp.</p>
-        </form>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <h2>Preguntas frecuentes</h2>
-        <div class="faq">
-          <details>
-            <summary>¿Necesito reservar?</summary>
-            <p>
-              Te recomendamos reservar para asegurar tu lugar. Puedes hacerlo por
-              WhatsApp en un minuto.
-            </p>
-          </details>
-          <details>
-            <summary>¿Cómo cambio mi cita?</summary>
-            <p>Escríbenos por WhatsApp con anticipación y la reagendamos.</p>
-          </details>
-          <details>
-            <summary>¿Cuál es el horario?</summary>
-            <p>
-              De lunes a viernes de 4:00 a 8:00 p. m. y sábados de 9:00 a. m. a
-              2:00 p. m. Los domingos estamos cerrados.
-            </p>
-          </details>
-          <details>
-            <summary>¿Dónde están?</summary>
-            <p>{NEGOCIO.direccion}.</p>
-          </details>
-        </div>
+        <Reserva />
       </div>
     </section>
   </main>
 
-  <footer>
-    <div class="container footer-inner">
-      <span>© {year} {NEGOCIO.nombre}</span>
-      <span>Sitio hecho por <a href="https://webwizards.site">Web Wizards</a></span>
+  <!-- 7. Footer -->
+  <footer class="footer">
+    <div class="wrap">
+      <div class="footer-top">
+        <p class="footer-logo">MAREA</p>
+        <div class="footer-cols">
+          <div>
+            <p class="footer-label">Visita</p>
+            <p>{NEGOCIO.zona}</p>
+          </div>
+          <div>
+            <p class="footer-label">Contacto</p>
+            <p><a class="link-light" href={`mailto:${NEGOCIO.email}`}>{NEGOCIO.email}</a></p>
+          </div>
+          <div>
+            <p class="footer-label">Horario</p>
+            {NEGOCIO.horario.map((h) => <p>{h.dias}: {h.horas}</p>)}
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>
+          Sitio de demostración. MAREA es una marca ficticia; datos de contacto y
+          disponibilidad de ejemplo.
+        </p>
+        <p>
+          Diseño y sistema de reservas por <a class="link-light" href="https://webwizards.site">Web Wizards</a> · Fotografías: Unsplash · © {year}
+        </p>
+      </div>
     </div>
   </footer>
 
-  <a class="wa-float" href={waReserva} target="_blank" rel="noopener">
-    💬 Reservar
-  </a>
+  <a class="mobile-book" href="#reservar">Reservar experiencia</a>
 
-  <script is:inline define:vars={{ numero: NEGOCIO.whatsapp, nombre: NEGOCIO.nombre }}>
-    const form = document.getElementById("reserva");
-    form?.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const d = new FormData(form);
-      let dia = d.get("dia");
-      if (dia) {
-        const [y, m, n] = dia.split("-").map(Number);
-        dia = new Date(y, m - 1, n).toLocaleDateString("es-MX", {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-        });
-      }
-      const texto =
-        `Hola, soy ${d.get("nombre")}. Quiero reservar: ${d.get("servicio")}` +
-        (dia ? `, el ${dia}` : "") +
-        (d.get("horario") ? `, en horario ${d.get("horario")}` : "") +
-        `. ¿Hay disponibilidad? (${nombre})`;
-      window.open(
-        `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`,
-        "_blank",
-        "noopener"
-      );
-    });
+  <script>
+    const nav = document.querySelector<HTMLElement>("[data-nav]")!;
+    const toggle = document.querySelector<HTMLButtonElement>("[data-menu]")!;
+    const onScroll = () => {
+      nav.classList.toggle("is-solid", window.scrollY > 40);
+      document.body.classList.toggle("past-hero", window.scrollY > window.innerHeight * 0.8);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    const setMenu = (open: boolean) => {
+      document.body.classList.toggle("menu-open", open);
+      toggle.setAttribute("aria-expanded", String(open));
+      toggle.querySelector(".sr")!.textContent = open ? "Cerrar menú" : "Abrir menú";
+    };
+    toggle.addEventListener("click", () => setMenu(!document.body.classList.contains("menu-open")));
+    document.querySelectorAll("#menu a").forEach((a) => a.addEventListener("click", () => setMenu(false)));
+    document.addEventListener("keydown", (e) => e.key === "Escape" && setMenu(false));
+
+    const io = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("is-in");
+            io.unobserve(e.target);
+          }
+        }),
+      { threshold: 0.25 }
+    );
+    document.querySelectorAll("[data-reveal]").forEach((el) => io.observe(el));
+
+    // La barra de reserva móvil se oculta cuando el formulario ya está a la vista.
+    const zona = document.getElementById("reservar")!;
+    new IntersectionObserver(([e]) => document.body.classList.toggle("at-booking", e.isIntersecting), {
+      threshold: 0.05,
+    }).observe(zona);
   </script>
 </Layout>
