@@ -1,5 +1,5 @@
 ---
-import { NEGOCIO, TRATAMIENTOS, formatoPrecio } from "../config.js";
+import { NEGOCIO, TRATAMIENTOS, DEMO, formatoPrecio } from "../config.js";
 
 const datos = {
   tratamientos: TRATAMIENTOS.map(({ id, nombre, duracion, precio }) => ({
@@ -12,6 +12,7 @@ const datos = {
   dias: NEGOCIO.diasReservables,
   whatsapp: NEGOCIO.whatsapp,
   nombre: `${NEGOCIO.nombre} ${NEGOCIO.subtitulo}`,
+  demo: DEMO.activo,
 };
 ---
 
@@ -105,6 +106,12 @@ const datos = {
         <button type="button" class="btn-text" data-restart>Hacer otra reserva</button>
         <a class="btn btn-dark" data-done-link hidden target="_blank" rel="noopener">Abrir WhatsApp</a>
       </div>
+      {DEMO.activo && (
+        <div class="demo-pitch">
+          <p>¿Quieres recibir reservas así en tu spa o clínica?</p>
+          <a class="link" href={DEMO.url} target="_blank" rel="noopener">Hablar con {DEMO.agencia} <span aria-hidden="true">→</span></a>
+        </div>
+      )}
     </div>
   </form>
 </div>
@@ -285,13 +292,15 @@ const datos = {
       `el ${fmtFecha(fecha!)} a las ${hora}. Teléfono: ${d.get("telefono")}. Correo: ${d.get("email")}.` +
       (d.get("notas") ? ` Notas: ${d.get("notas")}.` : "") +
       ` (${D.nombre})`;
+    const textoFinal = D.demo ? `[Demo MAREA] ${texto}` : texto;
 
     if (D.whatsapp) {
-      const url = `https://wa.me/${D.whatsapp}?text=${encodeURIComponent(texto)}`;
+      const url = `https://wa.me/${D.whatsapp}?text=${encodeURIComponent(textoFinal)}`;
       link.href = url;
       link.hidden = false;
-      note.textContent =
-        "Tu cita aún no está confirmada. Envía el mensaje por WhatsApp y el equipo te responderá para confirmarla.";
+      note.textContent = D.demo
+        ? "Así llega una reserva: el mensaje se abre en WhatsApp con todos los datos. En este demo lo recibe Web Wizards; en tu sitio lo recibiría tu equipo para confirmar la cita."
+        : "Tu cita aún no está confirmada. Envía el mensaje por WhatsApp y el equipo te responderá para confirmarla.";
       window.open(url, "_blank", "noopener");
     } else {
       link.hidden = true;

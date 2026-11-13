@@ -1,14 +1,20 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Reserva from "../components/Reserva.astro";
-import { NEGOCIO, TRATAMIENTOS, formatoPrecio } from "../config.js";
+import { NEGOCIO, TRATAMIENTOS, DEMO, formatoPrecio } from "../config.js";
 
 const year = new Date().getFullYear();
 const desde = Math.min(...TRATAMIENTOS.map((t) => t.precio));
 ---
 
 <Layout title="MAREA Spa & Wellness · Spa boutique en Tulum">
-  <header class="nav" data-nav>
+  {DEMO.activo && (
+    <div class="demo-bar">
+      <p>Sitio demo de {DEMO.agencia}: diseño y reservas en línea para spas y clínicas.</p>
+      <a href={DEMO.url} target="_blank" rel="noopener">Quiero uno así <span aria-hidden="true">→</span></a>
+    </div>
+  )}
+  <header class={DEMO.activo ? "nav has-demo" : "nav"} data-nav>
     <div class="wrap nav-inner">
       <a class="logo" href="#inicio" aria-label="MAREA Spa & Wellness, inicio">
         MAREA<span>Spa &amp; Wellness</span>

@@ -6,8 +6,8 @@ export const NEGOCIO = {
   ciudad: "Tulum, Quintana Roo",
   zona: "Región 15, Tulum, Quintana Roo",
   email: "hola@marea-spa.example",
-  // Número de WhatsApp del negocio (formato internacional, solo dígitos).
-  // Vacío = modo demostración: la solicitud se prepara pero no se envía a nadie.
+  // Número de WhatsApp que recibe las solicitudes (formato internacional, solo dígitos).
+  // En el demo es el de Web Wizards. Vacío = la solicitud se prepara pero no se envía.
   whatsapp: "",
   descripcion:
     "MAREA, spa boutique en Tulum: masajes, rituales faciales y experiencias corporales entre la selva y el mar. Reserva tu experiencia en línea.",
@@ -18,6 +18,13 @@ export const NEGOCIO = {
   // Horarios de inicio que ofrece la agenda.
   horarios: ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00"],
   diasReservables: 21,
+};
+
+// Demo comercial de Web Wizards. Para un cliente real: demo: false.
+export const DEMO = {
+  activo: true,
+  agencia: "Web Wizards",
+  url: "https://webwizards.site",
 };
 
 export const TRATAMIENTOS = [
